@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YT Comment Analyzer</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <div class="container">
+    <header>
+      <img src="https://www.gstatic.com/youtube/img/branding/youtubelogo/svg/youtubelogo.svg" alt="YouTube Logo"
+        class="logo">
+      <h1>Comment Analyzer</h1>
+    </header>
+
+    <main>
+      <button id="analyze-btn">Анализировать комментарии</button>
+
+      <div id="status-container" class="hidden">
+        <div class="spinner"></div>
+        <p id="status-text">Сбор данных...</p>
+      </div>
+
+      <div id="result-container" class="hidden">
+        <div id="result-content"></div>
+      </div>
+    </main>
+
+    <footer>
+      <p>Powered by n8n & Gemini</p>
+    </footer>
+  </div>
+  <script src="popup.js"></script>
+</body>
+
+</html>

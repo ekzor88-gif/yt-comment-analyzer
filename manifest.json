@@ -1,0 +1,17 @@
+{
+    "manifest_version": 3,
+    "name": "YouTube Comment Analyzer",
+    "version": "1.0",
+    "description": "Analyzes YouTube comments using AI via n8n webhook.",
+    "permissions": [
+        "activeTab",
+        "scripting"
+    ],
+    "action": {
+        "default_popup": "popup.html",
+        "default_title": "Analyze YouTube Comments"
+    },
+    "host_permissions": [
+        "https://a1-n8n1.alem.ai/webhook/yt-comment-analisys"
+    ]
+}
