@@ -1,0 +1,511 @@
+{
+  "name": "YT-comment-analisys",
+  "nodes": [
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9aa56f5f-4db4-4e27-9ced-99723e515de6",
+              "name": "url",
+              "value": "={{ $json.body.url }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -208,
+        0
+      ],
+      "id": "631b0d37-c32e-401e-bbc4-f4a96e82ef0a",
+      "name": "Get-YT-url"
+    },
+    {
+      "parameters": {
+        "content": "Запускаем запрос и получаем датасет ",
+        "height": 320,
+        "width": 1456
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -208,
+        -112
+      ],
+      "typeVersion": 1,
+      "id": "5026b85a-a99c-4bf2-baa4-f3f96aba5886",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "alemllm",
+          "mode": "list",
+          "cachedResultName": "ALEMLLM"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=Ты — аналитик настроений. Ниже приведен список комментариев из YouTube. Твоя задача:\n\nОпределить общее настроение (позитивное, негативное или нейтральное). \nЧто больше всего отмечают люди в комментариях? \nДанные для анализа: {{ $json.comment }}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        1312,
+        -112
+      ],
+      "id": "ab28583e-cfcd-4895-a36f-9ad5e7857b47",
+      "name": "LLM-comments-alalisys",
+      "credentials": {
+        "openAiApi": {
+          "id": "LaLC6gOqUmaZPNmM",
+          "name": "AlemLLM"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.apify.com/v2/acts/streamers~youtube-comments-scraper/runs",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"startUrls\": [\n    { \"url\": \"{{ $('Get-YT-url').item.json.url }}\"}],\n  \"maxComments\" : 20\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        32,
+        0
+      ],
+      "id": "919ed894-b48e-4e4f-8deb-b85f167b2588",
+      "name": "Post-url-for-comment-scraps",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "sIBFmi5voVRJ31MO",
+          "name": "ApiFy-api-key"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.apify.com/v2/datasets/{{ $json.data.defaultDatasetId }}/items",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "token",
+              "value": "={{ $credentials.ApiFy-api-key.apiKey }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        416,
+        -80
+      ],
+      "id": "361b5a67-161e-4159-8478-5ccfc9b75152",
+      "name": "Get-comment-dataset",
+      "alwaysOutputData": true,
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "sIBFmi5voVRJ31MO",
+          "name": "ApiFy-api-key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "yt-comment-analisys",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -512,
+        0
+      ],
+      "id": "4ba1aa01-589e-461f-9b3d-1587a9890469",
+      "name": "Webhook",
+      "webhookId": "67e72192-2596-4497-9e00-d84d141f226c"
+    },
+    {
+      "parameters": {
+        "amount": 15
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        240,
+        -80
+      ],
+      "id": "5867a5a8-3bc7-4fb0-a876-2e10f3a0af60",
+      "name": "Wait",
+      "webhookId": "61fa1ce7-a4cd-47d8-a976-8a6211a12bba"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "488970a2-a764-4134-94cb-f7e15d4436cd",
+              "leftValue": "={{ $json.authorIsChannelOwner }}",
+              "rightValue": "\"false\"",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        592,
+        -80
+      ],
+      "id": "696a8be0-ef18-419c-a8f1-f0c0176c6e05",
+      "name": "Not-author-Filter",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f6cd18cf-d689-4051-bb3d-bf7c20060f71",
+              "name": "output_text",
+              "value": "={{ $json.output[0].content[0].text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1600,
+        -32
+      ],
+      "id": "570a5e9f-ab56-4a50-b5ae-d5e112d73948",
+      "name": "output_text"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1f001ba4-7579-4e68-9560-34abc578883b",
+              "name": "output_text",
+              "value": "У этого видео пока нет обсуждений или автор скрыл комментарии",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1184,
+        192
+      ],
+      "id": "bae4b218-a36d-40e1-9103-15417e55a1ee",
+      "name": "null_output_text"
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "comment"
+            },
+            {
+              "fieldToAggregate": "author"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1104,
+        -112
+      ],
+      "id": "b7995cf3-b37c-4be1-9514-4b4bb4ecc337",
+      "name": "Aggregate-comments"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "9dd3c29b-347c-4d01-862e-d1004653f3a3",
+              "leftValue": "={{ $json.comment }}",
+              "rightValue": "={{ 0 }}",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        800,
+        -80
+      ],
+      "id": "ed9557a3-f63f-4489-a46a-0adc8b27f8cb",
+      "name": "If-coometns-empty",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1840,
+        32
+      ],
+      "id": "7d7f6e11-c28a-439f-9144-f5a7369da3a0",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "17e36b08-f711-4dde-94cd-e9526455efde",
+              "name": "output_text",
+              "value": "Произошла ошибка, мы работаем над восстановлением ",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1184,
+        336
+      ],
+      "id": "cc4d4eb5-0cda-4a47-b84b-fa6e86eb8ed5",
+      "name": "Error-output"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Get-YT-url": {
+      "main": [
+        [
+          {
+            "node": "Post-url-for-comment-scraps",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Post-url-for-comment-scraps": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Error-output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get-comment-dataset": {
+      "main": [
+        [
+          {
+            "node": "Not-author-Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Get-YT-url",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LLM-comments-alalisys": {
+      "main": [
+        [
+          {
+            "node": "output_text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Get-comment-dataset",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Not-author-Filter": {
+      "main": [
+        [
+          {
+            "node": "If-coometns-empty",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate-comments": {
+      "main": [
+        [
+          {
+            "node": "LLM-comments-alalisys",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If-coometns-empty": {
+      "main": [
+        [
+          {
+            "node": "Aggregate-comments",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "null_output_text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "output_text": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "null_output_text": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Error-output": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": "zo7-SFZH6khULh8rvoNFu"
+  },
+  "versionId": "1c3c691a-4a9b-4d3e-bcdb-477c56a27a93",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "3e86a97bbe29d7347d8d1cc1b6744821952b6d65507638dc9a846309efc47fd3"
+  },
+  "id": "3dWQsI7wo55k2c77eSQNd",
+  "tags": []
+}
